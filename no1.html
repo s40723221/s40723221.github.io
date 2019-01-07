@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>no1</title>
+
+<link rel="shortcut icon" href="css/favicon.ico">    
+<link rel="stylesheet" type="text/css" href="css/bssite.css" media="screen" />
+ 
+<script type="text/javascript" src="static/jquery-3.3.1.min.js" ></script>
+<script type="text/javascript" src="static/jquery-ui.1.12.1.min.js" ></script>
+<script type="text/javascript" src="static/pixi-4.8.2.min.js"></script>
+<script type="text/javascript" src="static/buzz-1.2.1.js"></script>
+<script type="text/javascript" src="static/brython-3.7.0.js"></script>
+<script type="text/javascript" src="static/brython_stdlib-3.7.0.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+window.onload=function(){
+brython({debug:1, pythonpath:['static']});
+}
+</script>
+<script type="text/python">
+'''
+# example 1
+# 從 ggame 目錄中, 導入 App, ImageAsset 與 Sprite 模組
+from ggame import (
+    App, 
+    ImageAsset, 
+    Sprite, 
+    LineAsset,
+    LineStyle,
+    Color
+)
+# Create a displayed object at 100,100 using an image asset
+Sprite(ImageAsset("images/bunny.png"), (100,100))
+Sprite(ImageAsset("images/bunny.png"), (200,200))
+Sprite(ImageAsset("images/bunny.png"), (300,300))
+Sprite(ImageAsset("images/bunny.png"), (400,400))
+Sprite(ImageAsset("images/bunny.png"), (500,500))
+# Create the app, with a default stage
+app = App()  
+# Run the app
+app.run()
+
+# example 2
+from time import time
+from ggame import (
+    App, 
+    Color, 
+    LineStyle, 
+    Sprite, 
+    RectangleAsset, 
+    ImageAsset,
+    CircleAsset, 
+    EllipseAsset, 
+    PolygonAsset,
+)
+
+t0 = time()
+
+# reverse - change the ball direction
+def reverse(b):
+    b.direction *= -1
+
+# Set up function for handling screen refresh
+def step():
+    t = time() - t0
+    ball.y = ball.y * t + 0.5 * 9.8 * t * t
+    if ball.y + ball.height > myapp.height or ball.y < 0:
+        ball.y = 0
+        ball.x +=50
+
+myapp = App()
+
+# Three primary colors with no transparency (alpha = 1.0)
+red = Color(0xff0000, 1.0)
+green = Color(0x00ff00, 1.0)
+blue = Color(0x0000ff, 1.0)
+black = Color(0x000000, 1.0)
+
+# Define a line style that is a thin (1 pixel) wide black line
+thinline = LineStyle(1, black)
+# A graphics asset that represents a rectangle
+rectangle = RectangleAsset(50, 20, thinline, blue)
+
+# define colors and line style
+green = Color(0x00ff00, 1)
+black = Color(0, 1)
+noline = LineStyle(0, black)
+# a rectangle asset and sprite to use as background
+bg_asset = RectangleAsset(myapp.width, myapp.height, noline, green)
+bg = Sprite(bg_asset, (0,0))
+
+# Now display a rectangle
+Sprite(rectangle)
+
+# A ball! This is already in the ggame-tutorials repository
+ball_asset = ImageAsset("images/orb-150545_640.png")
+ball = Sprite(ball_asset, (500, 500))
+# Original image is too big. Scale it to 1/10 its original size
+ball.scale = 0.1
+# custom attributes
+ball.direction = 1
+ball.go = True
+
+myapp.run(step)
+'''
+
+# example 3
+from time import time
+from ggame import (
+    App, 
+    Color, 
+    Sound,
+    LineStyle, 
+    Sprite, 
+    RectangleAsset, 
+    ImageAsset,
+    CircleAsset, 
+    EllipseAsset, 
+    PolygonAsset,
+    SoundAsset,
+)
+
+myapp = App()
+
+# define colors and line style
+green = Color(0x00ff00, 1)
+black = Color(0, 1)
+noline = LineStyle(0, black)
+# a rectangle asset and sprite to use as background
+bg_asset = RectangleAsset(myapp.width, myapp.height, noline, green)
+bg = Sprite(bg_asset, (0,0))
+# A ball! This is already in the ggame-tutorials repository
+ball_asset = ImageAsset("images/orb-150545_640.png")
+ball1 = Sprite(ball_asset, (550, 0))
+ball2 = Sprite(ball_asset, (550, 0))
+# Original image is too big. Scale it to 1/10 its original size
+ball1.m = 10
+ball2.m = 20
+for ball in (ball1, ball2):
+    ball.scale = 0.1
+ball2.x = myapp.width - ball2.width
+# custom attributes
+for ball in (ball1, ball2):
+    ball.t0 = time()
+    ball.vx = 10
+    ball.vy = 0
+    ball.is_down = True
+    ball.go = True
+# Sounds
+pew1_asset = SoundAsset("sounds/pew1.mp3")
+pew1 = Sound(pew1_asset)
+pop_asset = SoundAsset("sounds/reappear.mp3")
+pop = Sound(pop_asset)
+
+# reverse - change the ball direction
+def reverse_x(b):
+    #pop.play()
+    b.vx *= -1
+
+def reverse_y(b):
+    b.t0 = time()
+    b.is_down = not b.is_down
+    b.vy *= -1
+
+def impact(b1, b2):
+    v = (b1.m * b1.vx + b2.m * b2.vx) / (b1.m + b2.m)
+    b1.vx = v
+    b2.vx = v
+
+# Set up function for handling screen refresh
+def step():
+    for ball in (ball1, ball2):
+        if not ball.go:
+            continue
+
+        # X aixs
+        ball.x += ball.vx
+        if ball.x + ball.width > myapp.width or ball.x < 0:
+            ball.x -= ball.vx
+            reverse_x(ball)
+
+        # Y axis
+        t = time() - ball.t0
+        if ball.is_down:
+            ball.vy = 0.5 * 9.8 * t * t
+        else:
+            # "ball.vy" is negtive.
+            ball.vy += 0.5 * 9.8 * t * t
+            if ball.vy >= 0:
+                reverse_y(ball)
+        ball.y += ball.vy
+        if ball.y + ball.height > myapp.height:
+            ball.y -= ball.vy
+            reverse_y(ball)
+
+    if ball1.x + ball.width >= ball2.x:
+        impact(ball1, ball2)
+
+# Handle the space key
+def spaceKey(event):
+    for ball in (ball1, ball2):
+        ball.go = not ball.go
+
+# Handle the mouse click
+def mouseClick(event):
+    pew1.play()
+    for ball in (ball1, ball2):
+        ball.t0 = time()
+        ball.x = event.x
+        ball.y = event.y
+
+# Set up event handlers for the app
+myapp.listenKeyEvent('keydown', 'space', spaceKey)
+myapp.listenMouseEvent('click', mouseClick)
+    
+myapp.run(step)
+</script>
+</body>
+</html>
+
